@@ -20,14 +20,17 @@ my @test_names = qw/
 	get-header-key-duplicate
 	get-header-value-order
 	get-header-value-trim
+	get-relative
+	get-relative-relative
+	get-slash
+	get-slash-dot-slash
+	get-slashes
+	get-slash-pointless-dot 
 /;
 my @dont_test = (
 	'get-header-value-multiline', # only .req supplied
-	'get-relative', # not implemented
-	'get-relative-relative', # not implemented
-	'get-slash', # not implemented
 );
-# TODO: get-slash-dot-slash get-slashes get-slash-pointless-dot get-space get-unreserved get-utf8 post-header-key-case post-header-key-sort post-header-value-case post-vanilla post-vanilla-empty-query-value post-vanilla-query post-vanilla-query-nonunreserved post-vanilla-query-space post-x-www-form-urlencoded post-x-www-form-urlencoded-parameters
+# TODO: get-space get-unreserved get-utf8 post-header-key-case post-header-key-sort post-header-value-case post-vanilla post-vanilla-empty-query-value post-vanilla-query post-vanilla-query-nonunreserved post-vanilla-query-space post-x-www-form-urlencoded post-x-www-form-urlencoded-parameters
 
 
 plan tests =>  1+3*@test_names;

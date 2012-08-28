@@ -1,5 +1,8 @@
 Revision history for Net-Amazon-Signature-v4
 
+0.06	2012-08-28
+		URI canonicalization to support "//", "." and ".." in URIs.
+
 0.05	2012-08-28
 		Improved documentation.
 

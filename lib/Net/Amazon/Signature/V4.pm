@@ -15,11 +15,11 @@ Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature versio
 
 =head1 VERSION
 
-Version 0.05
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 
 =head1 SYNOPSIS
@@ -84,6 +84,7 @@ sub _canonical_request {
 		? ( $1, $2 )
 		: ( $req->uri, '' );
 	$creq_canonical_uri =~ s@^http://.*?/@/@;
+	$creq_canonical_uri = _simplify_uri( $creq_canonical_uri );
 	$creq_canonical_query_string = _sort_query_string( $creq_canonical_query_string );
 
 	my @sorted_headers = sort { lc($a) cmp lc($b) } $req->headers->header_field_names;
@@ -146,6 +147,22 @@ Tim Nordenfur, C<< <tim at gurka.se> >>
 
 =cut
 
+sub _simplify_uri {
+	my $orig_uri = shift;
+	my @parts = split /\//, $orig_uri;
+	my @simple_parts = ();
+	for my $part ( @parts ) {
+		if ( ! $part || $part eq '.' ) {
+		} elsif ( $part eq '..' ) {
+			pop @simple_parts;
+		} else {
+			push @simple_parts, $part;
+		}
+	}
+	my $simple_uri = '/' . join '/', @simple_parts;
+	$simple_uri .= '/' if $orig_uri =~ m@/$@ && $simple_uri !~ m@/$@;
+	return $simple_uri;
+}
 sub _sort_query_string {
 	return '' unless $_[0];
 	join '&', sort { $a cmp $b } split /&/, $_[0];
