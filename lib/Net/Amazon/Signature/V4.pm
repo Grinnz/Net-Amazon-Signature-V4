@@ -15,11 +15,11 @@ Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature versio
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 
 =head1 SYNOPSIS
@@ -29,15 +29,19 @@ This module signs an HTTP::Request to Amazon Web Services by appending an Author
     use Net::Amazon::Signature::V4;
 
     my $sig = Net::Amazon::Signature::V4->new( $account_id, $secret, $endpoint, $service );
-	my $req = HTTP::Request->parse( $request_string );
-	my $signed_req = $sig->sign( $req );
+    my $req = HTTP::Request->parse( $request_string );
+    my $signed_req = $sig->sign( $req );
     ...
 
 The primary purpose of this module is to be used by Net::Amazon::Glacier.
 
-=head1 SUBROUTINES
+=head1 METHODS
 
-=head2 new
+=head2 new( $access_key_id, $secret, $endpoint, $service )
+
+Constructs the signature object, which is used to sign requests.
+
+Note that the access key ID is an alphanumeric string, not your account ID. The endpoint could be "eu-west-1", and the service could be "glacier".
 
 =cut
 
@@ -54,7 +58,9 @@ sub new {
 	return $self;
 }
 
-=head2 sign
+=head2 sign( $request )
+
+Signs a request with your credentials by appending the Authorization header. $request should be an HTTP::Request. The signed request is returned.
 
 =cut
 

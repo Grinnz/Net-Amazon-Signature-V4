@@ -21,4 +21,4 @@ requires:
   DateTime::Format::Strptime: 0
   Digest::SHA: 0
   Test::More: 0
-version: 0.04
+version: 0.05
