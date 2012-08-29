@@ -34,10 +34,12 @@
          "requires" : {
             "DateTime::Format::Strptime" : "0",
             "Digest::SHA" : "0",
-            "Test::More" : "0"
+            "File::Slurp" : "0",
+            "Test::More" : "0",
+            "perl" : "0"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "0.06"
+   "version" : "0.07"
 }

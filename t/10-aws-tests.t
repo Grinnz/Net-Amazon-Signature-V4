@@ -26,12 +26,21 @@ my @test_names = qw/
 	get-slash-dot-slash
 	get-slashes
 	get-slash-pointless-dot 
+	get-space 
+	get-unreserved
+	get-utf8
+	post-header-key-case 
+	post-header-key-sort
+	post-header-value-case 
+	post-vanilla 
+	post-vanilla-empty-query-value
+	post-vanilla-query 
+	post-x-www-form-urlencoded 
+	post-x-www-form-urlencoded-parameters
 /;
-my @dont_test = (
-	'get-header-value-multiline', # only .req supplied
-);
-# TODO: get-space get-unreserved get-utf8 post-header-key-case post-header-key-sort post-header-value-case post-vanilla post-vanilla-empty-query-value post-vanilla-query post-vanilla-query-nonunreserved post-vanilla-query-space post-x-www-form-urlencoded post-x-www-form-urlencoded-parameters
-
+# TODO: test get-header-value-multiline (only .req supplied: why?)
+# TODO: test post-vanilla-query-space (unsure of test vailidity)
+# TODO: test post-vanilla-query-nonunreserved (unsure of test vailidity)
 
 plan tests =>  1+3*@test_names;
 

@@ -1,5 +1,9 @@
 Revision history for Net-Amazon-Signature-v4
 
+0.07	2012-08-29
+		Almost all AWS tests pass.
+		Fixed File::Slurp testing prerequisite.
+
 0.06	2012-08-28
 		URI canonicalization to support "//", "." and ".." in URIs.
 

@@ -20,5 +20,7 @@ no_index:
 requires:
   DateTime::Format::Strptime: 0
   Digest::SHA: 0
+  File::Slurp: 0
   Test::More: 0
-version: 0.06
+  perl: 0
+version: 0.07
