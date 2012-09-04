@@ -15,11 +15,11 @@ Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature versio
 
 =head1 VERSION
 
-Version 0.07
+Version 0.08
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 
 =head1 SYNOPSIS
@@ -83,7 +83,7 @@ sub _canonical_request {
 		( $req->uri =~ m@(.*)\?(.*)$@ )
 		? ( $1, $2 )
 		: ( $req->uri, '' );
-	$creq_canonical_uri =~ s@^http://.*?/@/@;
+	$creq_canonical_uri =~ s@^https?://.*?/@/@;
 	$creq_canonical_uri = _simplify_uri( $creq_canonical_uri );
 	$creq_canonical_query_string = _sort_query_string( $creq_canonical_query_string );
 

@@ -23,4 +23,4 @@ requires:
   File::Slurp: 0
   Test::More: 0
   perl: 0
-version: 0.07
+version: 0.08

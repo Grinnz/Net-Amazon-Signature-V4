@@ -10,3 +10,4 @@ pm_to_blib*
 cover_db
 pod2htm*.tmp
 Net-Amazon-Signature-v4-*
+author-test.pl
