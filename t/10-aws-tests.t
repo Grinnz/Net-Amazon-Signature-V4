@@ -8,41 +8,10 @@ use HTTP::Request;
 use Test::More;
 
 my $testsuite_dir = 't/aws4_testsuite';
-my @test_names = qw/
-	get-vanilla
-	get-vanilla-empty-query-key
-	get-vanilla-query
-	get-vanilla-query-order-key
-	get-vanilla-query-order-key-case
-	get-vanilla-query-order-value
-	get-vanilla-query-unreserved
-	get-vanilla-ut8-query
-	get-header-key-duplicate
-	get-header-value-order
-	get-header-value-trim
-	get-relative
-	get-relative-relative
-	get-slash
-	get-slash-dot-slash
-	get-slashes
-	get-slash-pointless-dot 
-	get-space 
-	get-unreserved
-	get-utf8
-	post-header-key-case 
-	post-header-key-sort
-	post-header-value-case 
-	post-vanilla 
-	post-vanilla-empty-query-value
-	post-vanilla-query 
-	post-x-www-form-urlencoded 
-	post-x-www-form-urlencoded-parameters
-/;
-# TODO: test get-header-value-multiline (only .req supplied: why?)
-# TODO: test post-vanilla-query-space (unsure of test vailidity)
-# TODO: test post-vanilla-query-nonunreserved (unsure of test vailidity)
+my @test_names = qw/get-header-key-duplicate get-header-value-order get-header-value-trim get-relative get-relative-relative get-slash get-slash-dot-slash get-slashes get-slash-pointless-dot get-space get-unreserved get-utf8 get-vanilla get-vanilla-empty-query-key get-vanilla-query get-vanilla-query-order-key get-vanilla-query-order-key-case get-vanilla-query-order-value get-vanilla-query-unreserved get-vanilla-ut8-query post-header-key-case post-header-key-sort post-header-value-case post-vanilla post-vanilla-empty-query-value post-vanilla-query post-vanilla-query-nonunreserved post-vanilla-query-space post-x-www-form-urlencoded post-x-www-form-urlencoded-parameters/; # all tests
+# only .req is supplied for test "get-header-value-multiline"; why?
 
-plan tests =>  1+3*@test_names;
+plan tests =>  1+4*@test_names;
 
 my $sig = Net::Amazon::Signature::V4->new(
 	'AKIDEXAMPLE',
@@ -55,15 +24,23 @@ ok( -d $testsuite_dir, 'testsuite directory existence' );
 
 for my $test_name ( @test_names ) {
 
+	ok( -f "$testsuite_dir/$test_name.req", "$test_name.req existence" );
 	my $req = HTTP::Request->parse( scalar read_file( "$testsuite_dir/$test_name.req" ) );
 
 	#diag("$test_name creq");
 	my $creq = $sig->_canonical_request( $req );
-	string_fits_file( $creq, "$testsuite_dir/$test_name.creq" );
+	if ( ! string_fits_file( $creq, "$testsuite_dir/$test_name.creq" ) ) {
+		fail( "canonical request mismatch, string-to-sign can't pass" );
+		fail( "canonical request mismatch, authorization can't pass" );
+		next;
+	}
 
 	#diag("$test_name sts");
 	my $sts = $sig->_string_to_sign( $req );
-	string_fits_file( $sts, "$testsuite_dir/$test_name.sts" );
+	if ( ! string_fits_file( $sts, "$testsuite_dir/$test_name.sts" ) ) {
+		fail( "string-to-sign request mismatch, authorization can't pass" );
+		next;
+	}
 
 	#diag("$test_name authz");
 	my $authz = $sig->_authorization( $req );
@@ -75,4 +52,5 @@ sub string_fits_file {
 	my $expected_str = read_file( $expected_path );
 	$expected_str =~ s/\r\n/\n/g;
 	is( $str, $expected_str, $expected_path );
+	return $str eq $expected_str;
 }

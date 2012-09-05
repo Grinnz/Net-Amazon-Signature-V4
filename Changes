@@ -1,5 +1,9 @@
 Revision history for Net-Amazon-Signature-v4
 
+0.10	2012-09-05
+		Entire AWS test suite passes.
+		Cleaner tests.
+
 0.08	2012-09-04
 		Support for HTTPS requests. (ticket #79390)
 

@@ -6,6 +6,8 @@ use warnings;
 
 use Digest::SHA qw/sha256_hex hmac_sha256 hmac_sha256_hex/;
 use DateTime::Format::Strptime qw/strptime/;
+use Data::Dumper;
+use URI::Escape;
 
 our $ALGORITHM = 'AWS4-HMAC-SHA256';
 
@@ -15,11 +17,11 @@ Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature versio
 
 =head1 VERSION
 
-Version 0.08
+Version 0.10
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.10';
 
 
 =head1 SYNOPSIS
@@ -80,7 +82,7 @@ sub _canonical_request {
 	my $creq_method = $req->method;
 
 	my ( $creq_canonical_uri, $creq_canonical_query_string ) = 
-		( $req->uri =~ m@(.*)\?(.*)$@ )
+		( $req->uri =~ m@(.*?)\?(.*)$@ )
 		? ( $1, $2 )
 		: ( $req->uri, '' );
 	$creq_canonical_uri =~ s@^https?://.*?/@/@;
@@ -165,7 +167,20 @@ sub _simplify_uri {
 }
 sub _sort_query_string {
 	return '' unless $_[0];
-	join '&', sort { $a cmp $b } split /&/, $_[0];
+	my @params;
+	for my $param ( split /&/, $_[0] ) {
+		my ( $key, $value ) = 
+			map { tr/+/ /; uri_escape( uri_unescape( $_ ) ) } # escape all non-unreserved chars
+			split /=/, $param;
+		push @params, join '=', $key, ($value//'');
+	}
+	return join '&', sort { $a cmp $b } @params;
+	my $sorted_query_string = 
+		join '&',
+		sort { $a cmp $b }
+		map { $_ . (m/=/?'':'=') } # for empty values
+		split /&/,
+		$_[0];
 }
 sub _trim_whitespace {
 	return map { s/^\s*(.*?)\s*$/$1/; $_ } @_;
