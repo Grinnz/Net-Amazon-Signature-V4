@@ -17,6 +17,7 @@ WriteMakefile(
         'Test::More' => 0,
 		'Digest::SHA' => 0,
 		'DateTime::Format::Strptime' => 0,
+		'HTTP::Request' => 0,
 		'URI::Escape' => 0,
 		'File::Slurp' => 0, # used by tests
     },

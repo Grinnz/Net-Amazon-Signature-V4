@@ -35,6 +35,7 @@
             "DateTime::Format::Strptime" : "0",
             "Digest::SHA" : "0",
             "File::Slurp" : "0",
+            "HTTP::Request" : "0",
             "Test::More" : "0",
             "URI::Escape" : "0",
             "perl" : "0"
@@ -42,5 +43,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.10"
+   "version" : "0.11"
 }
