@@ -1,5 +1,8 @@
 Revision history for Net-Amazon-Signature-v4
 
+0.12	2012-10-03
+		Fixed documentation errors (ticket #79965)
+
 0.11	2012-09-13
 		Added HTTP::Request prerequisite.
 

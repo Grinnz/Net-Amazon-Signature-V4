@@ -1,5 +1,5 @@
 ---
-abstract: 'Implements the Amazon Web Services signature version 4, AWS4-HMAK-SHA256'
+abstract: 'Implements the Amazon Web Services signature version 4, AWS4-HMAC-SHA256'
 author:
   - 'Tim Nordenfur <tim@gurka.se>'
 build_requires:
@@ -25,4 +25,4 @@ requires:
   Test::More: 0
   URI::Escape: 0
   perl: 0
-version: 0.11
+version: 0.12

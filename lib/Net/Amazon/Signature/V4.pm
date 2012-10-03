@@ -13,24 +13,24 @@ our $ALGORITHM = 'AWS4-HMAC-SHA256';
 
 =head1 NAME
 
-Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature version 4, AWS4-HMAK-SHA256
+Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature version 4, AWS4-HMAC-SHA256
 
 =head1 VERSION
 
-Version 0.11
+Version 0.12
 
 =cut
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 
 =head1 SYNOPSIS
 
-This module signs an HTTP::Request to Amazon Web Services by appending an Authorization header. Amazon Web Services signature version 4, AWS4-HMAK-SHA256, is used.
+This module signs an HTTP::Request to Amazon Web Services by appending an Authorization header. Amazon Web Services signature version 4, AWS4-HMAC-SHA256, is used.
 
     use Net::Amazon::Signature::V4;
 
-    my $sig = Net::Amazon::Signature::V4->new( $account_id, $secret, $endpoint, $service );
+    my $sig = Net::Amazon::Signature::V4->new( $access_key_id, $secret, $endpoint, $service );
     my $req = HTTP::Request->parse( $request_string );
     my $signed_req = $sig->sign( $req );
     ...
@@ -49,12 +49,12 @@ Note that the access key ID is an alphanumeric string, not your account ID. The 
 
 sub new {
 	my $class = shift;
-	my ( $account_id, $secret, $endpoint, $service ) = @_;
+	my ( $access_key_id, $secret, $endpoint, $service ) = @_;
 	my $self = {
-		account_id => $account_id,
-		secret     => $secret,
-		endpoint   => $endpoint,
-		service    => $service,
+		access_key_id => $access_key_id,
+		secret        => $secret,
+		endpoint      => $endpoint,
+		service       => $service,
 	};
 	bless $self, $class;
 	return $self;
@@ -135,7 +135,7 @@ sub _authorization {
 	my $k_signing = hmac_sha256( 'aws4_request',           $k_service );
 
 	my $authz_signature = hmac_sha256_hex( $sts, $k_signing );
-	my $authz_credential = join '/', $self->{account_id}, $dt->strftime('%Y%m%d'), $self->{endpoint}, $self->{service}, 'aws4_request';
+	my $authz_credential = join '/', $self->{access_key_id}, $dt->strftime('%Y%m%d'), $self->{endpoint}, $self->{service}, 'aws4_request';
 	my $authz_signed_headers = join ';', sort { $a cmp $b } map { lc } $req->headers->header_field_names;
 
 	my $authz = "$ALGORITHM Credential=$authz_credential, SignedHeaders=$authz_signed_headers, Signature=$authz_signature";
