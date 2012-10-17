@@ -1,5 +1,8 @@
 Revision history for Net-Amazon-Signature-v4
 
+0.13	2012-10-17
+		Fixed edge-case on query string order after clarification from Amazon.
+
 0.12	2012-10-03
 		Fixed documentation errors (ticket #79965)
 

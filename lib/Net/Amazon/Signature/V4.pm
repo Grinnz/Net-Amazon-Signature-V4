@@ -3,6 +3,7 @@ package Net::Amazon::Signature::V4;
 use 5.10.0;
 use strict;
 use warnings;
+use sort 'stable';
 
 use Digest::SHA qw/sha256_hex hmac_sha256 hmac_sha256_hex/;
 use DateTime::Format::Strptime qw/strptime/;
@@ -17,11 +18,11 @@ Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature versio
 
 =head1 VERSION
 
-Version 0.12
+Version 0.13
 
 =cut
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 
 =head1 SYNOPSIS
@@ -174,13 +175,24 @@ sub _sort_query_string {
 			split /=/, $param;
 		push @params, join '=', $key, ($value//'');
 	}
-	return join '&', sort { $a cmp $b } @params;
+	return join '&',
+		#sort { $a cmp $b }
+		sort {
+			my ( $a_key, $a_val ) = _key_val_split($a);
+			my ( $b_key, $b_val ) = _key_val_split($b);
+			( $a_key cmp $b_key ) || ( $a_val cmp $b_val );
+		}
+		@params;
 	my $sorted_query_string = 
 		join '&',
 		sort { $a cmp $b }
 		map { $_ . (m/=/?'':'=') } # for empty values
 		split /&/,
 		$_[0];
+}
+sub _key_val_split {
+	my ( $key, $val ) = ( $_[0] =~ m/^([^=]+)=(.*)$/ );
+	return ( $key, $val );
 }
 sub _trim_whitespace {
 	return map { s/^\s*(.*?)\s*$/$1/; $_ } @_;
