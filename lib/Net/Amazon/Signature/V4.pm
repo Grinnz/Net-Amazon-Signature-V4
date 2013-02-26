@@ -18,11 +18,11 @@ Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature versio
 
 =head1 VERSION
 
-Version 0.13
+Version 0.14
 
 =cut
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 
 =head1 SYNOPSIS
@@ -99,7 +99,7 @@ sub _canonical_request {
 		}
 		@sorted_headers;
 	my $creq_signed_headers = join ';', map {lc} @sorted_headers;
-	my $creq_payload_hash = sha256_hex( $req->content );
+	my $creq_payload_hash = $req->header('x-amz-content-sha256') ? $req->header('x-amz-content-sha256') : sha256_hex( $req->content );
 
 	my $creq = join "\n",
 		$creq_method, $creq_canonical_uri, $creq_canonical_query_string,

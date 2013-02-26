@@ -1,5 +1,8 @@
 Revision history for Net-Amazon-Signature-v4
 
+0.14	2013-02-26
+		Allow client-side content-sha256 calculation.
+
 0.13	2012-10-17
 		Fixed edge-case on query string order after clarification from Amazon.
 
