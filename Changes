@@ -1,43 +1,42 @@
 Revision history for Net-Amazon-Signature-v4
-0.15	2014-12-17
-		Remove dependency on perl 5.10 features.
 
-		Ensure a date is always present, using X-Amz-Date if present.
-
-		Remove spaces between Credential, SignedHeaders and Signature in the
-		header as per spec.
-
-		Use \x0a line endings as per spec.
+0.15	2017-03-30
+		- Patch by Steven Hartland (RT#100964):
+			- Remove dependency on perl 5.10 features.
+			- Ensure a date is always present, using X-Amz-Date if present.
+			- Remove spaces between Credential, SignedHeaders and Signature in the
+			  header as per spec.
+			- Use \x0a line endings as per spec.
 
 0.14	2013-02-26
-		Allow client-side content-sha256 calculation.
+		- Allow client-side content-sha256 calculation.
 
 0.13	2012-10-17
-		Fixed edge-case on query string order after clarification from Amazon.
+		- Fixed edge-case on query string order after clarification from Amazon.
 
 0.12	2012-10-03
-		Fixed documentation errors (ticket #79965)
+		- Fixed documentation errors (ticket #79965)
 
 0.11	2012-09-13
-		Added HTTP::Request prerequisite.
+		- Added HTTP::Request prerequisite.
 
 0.10	2012-09-05
-		Entire AWS test suite passes.
-		Cleaner tests.
+		- Entire AWS test suite passes.
+		- Cleaner tests.
 
 0.08	2012-09-04
-		Support for HTTPS requests. (ticket #79390)
+		- Support for HTTPS requests. (ticket #79390)
 
 0.07	2012-08-29
-		Almost all AWS tests pass.
-		Fixed File::Slurp testing prerequisite.
+		- Almost all AWS tests pass.
+		- Fixed File::Slurp testing prerequisite.
 
 0.06	2012-08-28
-		URI canonicalization to support "//", "." and ".." in URIs.
+		- URI canonicalization to support "//", "." and ".." in URIs.
 
 0.05	2012-08-28
-		Improved documentation.
+		- Improved documentation.
 
-0.01    2012-08-26
-        First version, released on an unsuspecting world.
+0.01	2012-08-26
+		- First version, released on an unsuspecting world.
 
