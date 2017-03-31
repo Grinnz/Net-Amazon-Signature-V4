@@ -14,12 +14,12 @@ my %WriteMakefile_args = (
     PREREQ_PM => {
         'Digest::SHA' => 0,
         'DateTime::Format::Strptime' => 0,
-        'HTTP::Request' => 0,
         'URI::Escape' => 0,
     },
     TEST_REQUIRES => {
         'Test::More' => 0,
         'File::Slurper' => 0,
+        'HTTP::Request' => 0,
     },
     META_MERGE => {
         'meta-spec' => { version => 2 },

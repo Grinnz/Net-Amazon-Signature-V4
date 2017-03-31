@@ -6,7 +6,6 @@ use sort 'stable';
 
 use Digest::SHA qw/sha256_hex hmac_sha256 hmac_sha256_hex/;
 use DateTime::Format::Strptime qw/strptime/;
-use Data::Dumper;
 use URI::Escape;
 
 our $ALGORITHM = 'AWS4-HMAC-SHA256';
