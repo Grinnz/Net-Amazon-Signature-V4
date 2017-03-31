@@ -1,5 +1,4 @@
 Changes
-ignore.txt
 lib/Net/Amazon/Signature/V4.pm
 LICENSE
 Makefile.PL

@@ -68,3 +68,4 @@
 ^Net-Amazon-Signature-V4-
 ^\.travis\.yml$
 ^MANIFEST\.SKIP
+^ignore\.txt
