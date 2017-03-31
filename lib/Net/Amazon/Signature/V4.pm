@@ -17,11 +17,12 @@ Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature versio
 
 =head1 VERSION
 
-Version 0.15
+Version 0.15_01
 
 =cut
 
-our $VERSION = '0.15';
+our $VERSION = '0.15_01';
+$VERSION = eval $VERSION;
 
 
 =head1 SYNOPSIS

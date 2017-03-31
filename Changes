@@ -1,6 +1,6 @@
 Revision history for Net-Amazon-Signature-v4
 
-0.15	2017-03-30
+0.15_01	2017-03-30
 		- Patch by Steven Hartland (RT#100964):
 			- Remove dependency on perl 5.10 features.
 			- Ensure a date is always present, using X-Amz-Date if present.
