@@ -24,6 +24,9 @@ my %WriteMakefile_args = (
     META_MERGE => {
         'meta-spec' => { version => 2 },
         dynamic_config => 0,
+        no_index => {
+            directory => [ 'xt' ],
+        },
         resources => {
             repository => {
                 type => 'git',
