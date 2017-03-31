@@ -155,6 +155,8 @@ sub _authorization {
 
 Tim Nordenfur, C<< <tim at gurka.se> >>
 
+Maintained by Dan Book, C<< <dbook at cpan.org> >>
+
 =cut
 
 sub _simplify_uri {
