@@ -1,5 +1,13 @@
 Revision history for Net-Amazon-Signature-v4
 
+0.15_02 2017-03-31
+		- Additional patch by Steven Hartland (RT#100964):
+			- Ensures the Host header is always present, as its required.
+			- Sets the X-Amz-Content-Sha256 when we calculate the payload hash, as
+			  certain regions require it.
+			- Always sets X-Amz-Date to workaround Amazon implementation not
+			  abiding by the spec and requiring X-Amz-Date in some regions.
+
 0.15_01	2017-03-30
 		- Patch by Steven Hartland (RT#100964):
 			- Remove dependency on perl 5.10 features.

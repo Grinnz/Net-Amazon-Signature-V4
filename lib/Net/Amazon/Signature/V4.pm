@@ -98,6 +98,23 @@ sub _canonical_request {
 	$creq_canonical_uri = _simplify_uri( $creq_canonical_uri );
 	$creq_canonical_query_string = _sort_query_string( $creq_canonical_query_string );
 
+	# Ensure Host header is present as its required
+	if (!$req->header('host')) {
+		$req->header('Host' => $req->uri->host);
+	}
+	my $creq_payload_hash = $req->header('x-amz-content-sha256');
+	if (!$creq_payload_hash) {
+		$creq_payload_hash = sha256_hex($req->content);
+		# X-Amz-Content-Sha256 must be specified now
+		$req->header('X-Amz-Content-Sha256' => $creq_payload_hash);
+	}
+
+	# There's a bug in AMS4 which causes requests without x-amz-date set to be rejected
+	# so we always add one if its not present.
+	my $amz_date = $req->header('x-amz-date');
+	if (!$amz_date) {
+		$req->header('X-Amz-Date' => _req_datetime($req)->strftime('%Y%m%dT%H%M%SZ'));
+	}
 	my @sorted_headers = _headers_to_sign( $req );
 	my $creq_canonical_headers = join '',
 		map {
@@ -107,7 +124,6 @@ sub _canonical_request {
 		}
 		@sorted_headers;
 	my $creq_signed_headers = join ';', map {lc} @sorted_headers;
-	my $creq_payload_hash = $req->header('x-amz-content-sha256') ? $req->header('x-amz-content-sha256') : sha256_hex( $req->content );
 	my $creq = join "\x0a",
 		$creq_method, $creq_canonical_uri, $creq_canonical_query_string,
 		$creq_canonical_headers, $creq_signed_headers, $creq_payload_hash;
