@@ -12,12 +12,14 @@ my %WriteMakefile_args = (
     LICENSE             => 'perl',
     PL_FILES            => {},
     PREREQ_PM => {
-        'Test::More' => 0,
         'Digest::SHA' => 0,
         'DateTime::Format::Strptime' => 0,
         'HTTP::Request' => 0,
         'URI::Escape' => 0,
-        'File::Slurp' => 0, # used by tests
+    },
+    TEST_REQUIRES => {
+        'Test::More' => 0,
+        'File::Slurper' => 0,
     },
     META_MERGE => {
         'meta-spec' => { version => 2 },
@@ -40,5 +42,9 @@ delete $WriteMakefile_args{META_MERGE}
   unless eval { ExtUtils::MakeMaker->VERSION('6.46') };
 delete $WriteMakefile_args{MIN_PERL_VERSION}
   unless eval { ExtUtils::MakeMaker->VERSION('6.48') };
+unless (eval { ExtUtils::MakeMaker->VERSION('6.64') }) {
+  my $test_requires = delete $WriteMakefile_args{TEST_REQUIRES};
+  $WriteMakefile_args{PREREQ_PM}{$_} = $test_requires->{$_} for keys %$test_requires;
+}
 
 WriteMakefile(%WriteMakefile_args);

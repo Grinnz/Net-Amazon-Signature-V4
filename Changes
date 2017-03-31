@@ -7,6 +7,8 @@ Revision history for Net-Amazon-Signature-v4
 			- Remove spaces between Credential, SignedHeaders and Signature in the
 			  header as per spec.
 			- Use \x0a line endings as per spec.
+        - Correctly declare test dependencies (ether) (RT#107308)
+        - Switch from File::Slurp to File::Slurper (ether) (RT#107310)
 
 0.14	2013-02-26
 		- Allow client-side content-sha256 calculation.

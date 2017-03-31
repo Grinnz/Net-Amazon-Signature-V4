@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 use Net::Amazon::Signature::V4;
-use File::Slurp;
+use File::Slurper 'read_text';
 use HTTP::Request;
 use Test::More;
 
@@ -25,7 +25,7 @@ ok( -d $testsuite_dir, 'testsuite directory existence' );
 for my $test_name ( @test_names ) {
 
 	ok( -f "$testsuite_dir/$test_name.req", "$test_name.req existence" );
-	my $req = HTTP::Request->parse( scalar read_file( "$testsuite_dir/$test_name.req" ) );
+	my $req = HTTP::Request->parse( read_text( "$testsuite_dir/$test_name.req" ) );
 
 	#diag("$test_name creq");
 	my $creq = $sig->_canonical_request( $req );
@@ -49,7 +49,7 @@ for my $test_name ( @test_names ) {
 
 sub string_fits_file {
 	my ( $str, $expected_path ) = @_;
-	my $expected_str = read_file( $expected_path );
+	my $expected_str = read_text( $expected_path );
 	$expected_str =~ s/\r\n/\n/g;
 	is( $str, $expected_str, $expected_path );
 	return $str eq $expected_str;
