@@ -157,7 +157,7 @@ t/aws4_testsuite/post-x-www-form-urlencoded.creq
 t/aws4_testsuite/post-x-www-form-urlencoded.req
 t/aws4_testsuite/post-x-www-form-urlencoded.sreq
 t/aws4_testsuite/post-x-www-form-urlencoded.sts
-t/boilerplate.t
-t/manifest.t
-t/pod-coverage.t
-t/pod.t
+xt/author/boilerplate.t
+xt/author/pod-coverage.t
+xt/author/pod.t
+xt/release/manifest.t
