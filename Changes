@@ -1,4 +1,13 @@
 Revision history for Net-Amazon-Signature-v4
+0.15	2014-12-17
+		Remove dependency on perl 5.10 features.
+
+		Ensure a date is always present, using X-Amz-Date if present.
+
+		Remove spaces between Credential, SignedHeaders and Signature in the
+		header as per spec.
+
+		Use \x0a line endings as per spec.
 
 0.14	2013-02-26
 		Allow client-side content-sha256 calculation.

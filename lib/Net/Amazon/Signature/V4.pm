@@ -1,6 +1,5 @@
 package Net::Amazon::Signature::V4;
 
-use 5.10.0;
 use strict;
 use warnings;
 use sort 'stable';
@@ -18,11 +17,11 @@ Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature versio
 
 =head1 VERSION
 
-Version 0.14
+Version 0.15
 
 =cut
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 
 =head1 SYNOPSIS
@@ -74,6 +73,15 @@ sub sign {
 	return $request;
 }
 
+# _headers_to_sign:
+# Return the sorted lower case headers as required by the generation of canonical headers
+
+sub _headers_to_sign {
+	my $req = shift;
+
+	return sort { $a cmp $b } map { lc } $req->headers->header_field_names;
+}
+
 # _canonical_request:
 # Construct the canonical request string from an HTTP::Request.
 
@@ -90,18 +98,17 @@ sub _canonical_request {
 	$creq_canonical_uri = _simplify_uri( $creq_canonical_uri );
 	$creq_canonical_query_string = _sort_query_string( $creq_canonical_query_string );
 
-	my @sorted_headers = sort { lc($a) cmp lc($b) } $req->headers->header_field_names;
+	my @sorted_headers = _headers_to_sign( $req );
 	my $creq_canonical_headers = join '',
 		map {
-			sprintf "%s:%s\n",
+			sprintf "%s:%s\x0a",
 				lc,
 				join ',', sort {$a cmp $b } _trim_whitespace($req->header($_) )
 		}
 		@sorted_headers;
 	my $creq_signed_headers = join ';', map {lc} @sorted_headers;
 	my $creq_payload_hash = $req->header('x-amz-content-sha256') ? $req->header('x-amz-content-sha256') : sha256_hex( $req->content );
-
-	my $creq = join "\n",
+	my $creq = join "\x0a",
 		$creq_method, $creq_canonical_uri, $creq_canonical_query_string,
 		$creq_canonical_headers, $creq_signed_headers, $creq_payload_hash;
 	return $creq;
@@ -112,13 +119,13 @@ sub _canonical_request {
 
 sub _string_to_sign {
 	my ( $self, $req ) = @_;
-	my $dt = _str_to_datetime( $req->header('Date') );
+	my $dt = _req_datetime( $req );
 	my $creq = $self->_canonical_request($req);
 	my $sts_request_date = $dt->strftime( '%Y%m%dT%H%M%SZ' );
 	my $sts_credential_scope = join '/', $dt->strftime('%Y%m%d'), $self->{endpoint}, $self->{service}, 'aws4_request';
 	my $sts_creq_hash = sha256_hex( $creq );
 
-	my $sts = join "\n", $ALGORITHM, $sts_request_date, $sts_credential_scope, $sts_creq_hash;
+	my $sts = join "\x0a", $ALGORITHM, $sts_request_date, $sts_credential_scope, $sts_creq_hash;
 	return $sts;
 }
 
@@ -128,7 +135,7 @@ sub _string_to_sign {
 sub _authorization {
 	my ( $self, $req ) = @_;
 
-	my $dt = _str_to_datetime( $req->header('Date') );
+	my $dt = _req_datetime( $req );
 	my $sts = $self->_string_to_sign( $req );
 	my $k_date    = hmac_sha256( $dt->strftime('%Y%m%d'), 'AWS4' . $self->{secret} );
 	my $k_region  = hmac_sha256( $self->{endpoint},        $k_date    );
@@ -137,9 +144,9 @@ sub _authorization {
 
 	my $authz_signature = hmac_sha256_hex( $sts, $k_signing );
 	my $authz_credential = join '/', $self->{access_key_id}, $dt->strftime('%Y%m%d'), $self->{endpoint}, $self->{service}, 'aws4_request';
-	my $authz_signed_headers = join ';', sort { $a cmp $b } map { lc } $req->headers->header_field_names;
+	my $authz_signed_headers = join ';', _headers_to_sign( $req );
 
-	my $authz = "$ALGORITHM Credential=$authz_credential, SignedHeaders=$authz_signed_headers, Signature=$authz_signature";
+	my $authz = "$ALGORITHM Credential=$authz_credential,SignedHeaders=$authz_signed_headers,Signature=$authz_signature";
 	return $authz;
 
 }
@@ -173,7 +180,7 @@ sub _sort_query_string {
 		my ( $key, $value ) = 
 			map { tr/+/ /; uri_escape( uri_unescape( $_ ) ) } # escape all non-unreserved chars
 			split /=/, $param;
-		push @params, join '=', $key, ($value//'');
+		push @params, join '=', $key, (defined $value ? $value : '');
 	}
 	return join '&',
 		#sort { $a cmp $b }
@@ -207,6 +214,16 @@ sub _str_to_datetime {
 		$date =~ s/^.{4}//; # remove weekday, as Amazon's test suite contains internally inconsistent dates
 		return strptime(  '%d %b %Y %H:%M:%S %Z', $date );
 	}
+}
+sub _req_datetime {
+	my $req = shift;
+	my $date = $req->header('X-Amz-Date') || $req->header('Date');
+	if (!$date) {
+		# No date set by the caller so set one up
+		$req->date(time);
+		$date = $req->header('Date');
+	}
+	return _str_to_datetime($date);
 }
 
 =head1 BUGS
