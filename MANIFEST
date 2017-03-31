@@ -161,5 +161,3 @@ t/boilerplate.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)
