@@ -229,7 +229,7 @@ sub _str_to_datetime {
 		return strptime( '%Y%m%dT%H%M%SZ', $date );
 	} else {
 		# assume the format given in the AWS4 test suite
-		$date =~ s/^.{4}//; # remove weekday, as Amazon's test suite contains internally inconsistent dates
+		$date =~ s/^.{5}//; # remove weekday, as Amazon's test suite contains internally inconsistent dates
 		return strptime(  '%d %b %Y %H:%M:%S %Z', $date );
 	}
 }
