@@ -1,5 +1,9 @@
 Revision history for Net-Amazon-Signature-v4
 
+		- Additional patch by Arthur Axel fREW Schmidt:
+			- Use Time::Piece instead of DateTime for date formatting/parsing.
+			- Avoid parsing the date at all if the user allowed it to be defaulted.
+
 0.15_02 2017-03-31
 		- Additional patch by Steven Hartland (RT#100964):
 			- Ensures the Host header is always present, as its required.
