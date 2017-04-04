@@ -13,7 +13,7 @@ my %WriteMakefile_args = (
     PL_FILES            => {},
     PREREQ_PM => {
         'Digest::SHA' => 0,
-        'DateTime::Format::Strptime' => 0,
+        'Time::Piece' => '1.17',
         'URI::Escape' => 0,
     },
     TEST_REQUIRES => {
