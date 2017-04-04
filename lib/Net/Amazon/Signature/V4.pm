@@ -235,11 +235,13 @@ sub _str_to_timepiece {
 }
 sub _req_timepiece {
 	my $req = shift;
-	my $date = $req->header('X-Amz-Date') || $req->header('Date');
+	my $x_date = $req->header('X-Amz-Date');
+	my $date = $x_date || $req->header('Date');
 	if (!$date) {
 		# No date set by the caller so set one up
-		$req->date(time);
-		$date = $req->header('Date');
+		my $piece = Time::Piece::gmtime;
+		$req->date($piece->epoch);
+		return $piece
 	}
 	return _str_to_timepiece($date);
 }
