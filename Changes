@@ -1,6 +1,7 @@
 Revision history for Net-Amazon-Signature-v4
 
-		- Additional patch by Arthur Axel fREW Schmidt:
+0.15_03 2017-04-04
+		- Additional patch by Arthur Axel fREW Schmidt (GH#1):
 			- Use Time::Piece instead of DateTime for date formatting/parsing.
 			- Avoid parsing the date at all if the user allowed it to be defaulted.
 
