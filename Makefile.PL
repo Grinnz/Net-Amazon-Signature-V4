@@ -1,4 +1,4 @@
-use 5.006;
+use 5.008001;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -33,6 +33,12 @@ my %WriteMakefile_args = (
                 web  => 'https://github.com/Grinnz/Net-Amazon-Signature-V4',
             },
         },
+        x_contributors => [
+            'Arthur Axel fREW Schmidt <frioux@gmail.com>',
+            'Dan Book <dbook@cpan.org>',
+            'Karen Etheridge <ether@cpan.org>',
+            'Steven Hartland <steven.hartland@multiplay.co.uk>',
+        ],
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Net-Amazon-Signature-V4-*' },
