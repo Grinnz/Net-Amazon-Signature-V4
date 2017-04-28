@@ -10,7 +10,6 @@ my %WriteMakefile_args = (
     ABSTRACT_FROM       => 'lib/Net/Amazon/Signature/V4.pm',
     MIN_PERL_VERSION    => '5.8.1',
     LICENSE             => 'perl',
-    PL_FILES            => {},
     PREREQ_PM => {
         'Digest::SHA' => 0,
         'Time::Piece' => '1.17',
