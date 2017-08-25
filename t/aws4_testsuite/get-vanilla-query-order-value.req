@@ -1,4 +1,4 @@
-GET /?foo=b&foo=a http/1.1
+GET /?foob=a&fooa=b&fooa=a&foob=b http/1.1
 Date:Mon, 09 Sep 2011 23:36:00 GMT
 Host:host.foo.com
 
