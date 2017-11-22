@@ -205,7 +205,7 @@ sub _sort_query_string {
 		@params;
 }
 sub _trim_whitespace {
-	return map { s/^\s*(.*?)\s*$/$1/; $_ } @_;
+	return map { my $str = $_; $str =~ s/^\s*//; $str =~ s/\s*$//; $str } @_;
 }
 sub _str_to_timepiece {
 	my $date = shift;
