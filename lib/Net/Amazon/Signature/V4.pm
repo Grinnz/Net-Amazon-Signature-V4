@@ -197,26 +197,12 @@ sub _sort_query_string {
 		my ( $key, $value ) = 
 			map { tr/+/ /; uri_escape( uri_unescape( $_ ) ) } # escape all non-unreserved chars
 			split /=/, $param;
-		push @params, join '=', $key, (defined $value ? $value : '');
+		push @params, [$key, (defined $value ? $value : '')];
 	}
 	return join '&',
-		#sort { $a cmp $b }
-		sort {
-			my ( $a_key, $a_val ) = _key_val_split($a);
-			my ( $b_key, $b_val ) = _key_val_split($b);
-			( $a_key cmp $b_key ) || ( $a_val cmp $b_val );
-		}
+		map { join '=', @$_ }
+		sort { ( $a->[0] cmp $b->[0] ) || ( $a->[1] cmp $b->[1] ) }
 		@params;
-	my $sorted_query_string = 
-		join '&',
-		sort { $a cmp $b }
-		map { $_ . (m/=/?'':'=') } # for empty values
-		split /&/,
-		$_[0];
-}
-sub _key_val_split {
-	my ( $key, $val ) = ( $_[0] =~ m/^([^=]+)=(.*)$/ );
-	return ( $key, $val );
 }
 sub _trim_whitespace {
 	return map { s/^\s*(.*?)\s*$/$1/; $_ } @_;
