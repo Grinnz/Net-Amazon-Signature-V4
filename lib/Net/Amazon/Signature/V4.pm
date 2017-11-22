@@ -93,7 +93,7 @@ sub _canonical_request {
 		( $req->uri =~ m@(.*?)\?(.*)$@ )
 		? ( $1, $2 )
 		: ( $req->uri, '' );
-	$creq_canonical_uri =~ s@^https?://.*?/@/@;
+	$creq_canonical_uri =~ s@^https?://.*?(/|$)@/@;
 	$creq_canonical_uri = _simplify_uri( $creq_canonical_uri );
 	$creq_canonical_query_string = _sort_query_string( $creq_canonical_query_string );
 
