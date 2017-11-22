@@ -90,7 +90,7 @@ sub _canonical_request {
 	my $creq_method = $req->method;
 
 	my ( $creq_canonical_uri, $creq_canonical_query_string ) = 
-		( $req->uri =~ m@(.*?)\?(.*)$@ )
+		( $req->uri =~ m@([^?]*)\?(.*)$@ )
 		? ( $1, $2 )
 		: ( $req->uri, '' );
 	$creq_canonical_uri =~ s@^https?://[^/]*/?@/@;
