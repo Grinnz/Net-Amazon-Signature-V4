@@ -179,7 +179,7 @@ sub _simplify_uri {
 	my @parts = split /\//, $orig_uri;
 	my @simple_parts = ();
 	for my $part ( @parts ) {
-		if ( ! $part || $part eq '.' ) {
+		if ( $part eq '' || $part eq '.' ) {
 		} elsif ( $part eq '..' ) {
 			pop @simple_parts;
 		} else {
