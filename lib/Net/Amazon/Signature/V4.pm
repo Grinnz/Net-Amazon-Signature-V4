@@ -67,6 +67,9 @@ Signs a request with your credentials by appending the Authorization header. $re
 
 sub sign {
 	my ( $self, $request ) = @_;
+
+	$request = $self->_augment_request( $request );
+
 	my $authz = $self->_authorization( $request );
 	$request->header( Authorization => $authz );
 	return $request;
@@ -79,6 +82,21 @@ sub _headers_to_sign {
 	my $req = shift;
 
 	return sort { $a cmp $b } map { lc } $req->headers->header_field_names;
+}
+
+# _augment_request:
+# Append mandatory header fields
+
+sub _augment_request {
+	my ( $self, $request ) = @_;
+
+	$request->header('X-Amz-Date' => _req_timepiece($request)->strftime('%Y%m%dT%H%M%SZ'))
+		unless $request->header('X-Amz-Date');
+
+	$request->header('X-Amz-Content-Sha256' => sha256_hex($request->content))
+		unless $request->header('X-Amz-Content-Sha256');
+
+	return $request;
 }
 
 # _canonical_request:
@@ -102,18 +120,10 @@ sub _canonical_request {
 		$req->header('Host' => $req->uri->host);
 	}
 	my $creq_payload_hash = $req->header('x-amz-content-sha256');
-	if (!$creq_payload_hash) {
-		$creq_payload_hash = sha256_hex($req->content);
-		# X-Amz-Content-Sha256 must be specified now
-		$req->header('X-Amz-Content-Sha256' => $creq_payload_hash);
-	}
 
 	# There's a bug in AMS4 which causes requests without x-amz-date set to be rejected
 	# so we always add one if its not present.
 	my $amz_date = $req->header('x-amz-date');
-	if (!$amz_date) {
-		$req->header('X-Amz-Date' => _req_timepiece($req)->strftime('%Y%m%dT%H%M%SZ'));
-	}
 	my @sorted_headers = _headers_to_sign( $req );
 	my $creq_canonical_headers = join '',
 		map {

@@ -26,6 +26,7 @@ for my $test_name ( @test_names ) {
 
 	ok( -f "$testsuite_dir/$test_name.req", "$test_name.req existence" );
 	my $req = HTTP::Request->parse( read_text( "$testsuite_dir/$test_name.req" ) );
+	$req = $sig->_augment_request( $req );
 
 	#diag("$test_name creq");
 	my $creq = $sig->_canonical_request( $req );
