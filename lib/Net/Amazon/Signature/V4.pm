@@ -132,7 +132,7 @@ sub _canonical_request {
 				join ',', sort {$a cmp $b } _trim_whitespace($req->header($_) )
 		}
 		@sorted_headers;
-	my $creq_signed_headers = join ';', map {lc} @sorted_headers;
+	my $creq_signed_headers = $self->_signed_headers( $req );
 	my $creq = join "\x0a",
 		$creq_method, $creq_canonical_uri, $creq_canonical_query_string,
 		$creq_canonical_headers, $creq_signed_headers, $creq_payload_hash;
@@ -157,7 +157,7 @@ sub _string_to_sign {
 # _authorization
 # Construct the authorization string
 
-sub _authorization {
+sub _signature {
 	my ( $self, $req ) = @_;
 
 	my $dt = _req_timepiece( $req );
@@ -168,8 +168,31 @@ sub _authorization {
 	my $k_signing = hmac_sha256( 'aws4_request',           $k_service );
 
 	my $authz_signature = hmac_sha256_hex( $sts, $k_signing );
+	return $authz_signature;
+}
+
+sub _credential {
+	my ( $self, $req ) = @_;
+
+	my $dt = _req_timepiece( $req );
+
 	my $authz_credential = join '/', $self->{access_key_id}, $dt->strftime('%Y%m%d'), $self->{endpoint}, $self->{service}, 'aws4_request';
+	return $authz_credential;
+}
+
+sub _signed_headers {
+	my ( $self, $req ) = @_;
+
 	my $authz_signed_headers = join ';', _headers_to_sign( $req );
+	return $authz_signed_headers;
+}
+
+sub _authorization {
+	my ( $self, $req ) = @_;
+
+	my $authz_signature = $self->_signature( $req );
+	my $authz_credential = $self->_credential( $req );
+	my $authz_signed_headers = $self->_signed_headers( $req );
 
 	my $authz = "$ALGORITHM Credential=$authz_credential,SignedHeaders=$authz_signed_headers,Signature=$authz_signature";
 	return $authz;
