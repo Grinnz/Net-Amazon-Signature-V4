@@ -7,8 +7,11 @@ use sort 'stable';
 use Digest::SHA qw/sha256_hex hmac_sha256 hmac_sha256_hex/;
 use Time::Piece ();
 use URI::Escape;
+use URI;
+use URI::QueryParam;
 
 our $ALGORITHM = 'AWS4-HMAC-SHA256';
+our $MAX_EXPIRES = 604800; # Max, 7 days
 
 our $X_AMZ_ALGORITHM      = 'X-Amz-Algorithm';
 our $X_AMZ_CONTENT_SHA256 = 'X-Amz-Content-Sha256';
@@ -16,6 +19,7 @@ our $X_AMZ_CREDENTIAL     = 'X-Amz-Credential';
 our $X_AMZ_DATE           = 'X-Amz-Date';
 our $X_AMZ_EXPIRES        = 'X-Amz-Expires';
 our $X_AMZ_SIGNEDHEADERS  = 'X-Amz-SignedHeaders';
+our $X_AMZ_SIGNATURE      = 'X-Amz-Signature';
 
 =head1 NAME
 
@@ -82,13 +86,46 @@ sub sign {
 	return $request;
 }
 
+=head2 sign_uri( $uri, $expires_in? )
+
+Signs an uri with your credentials by appending the Authorization query parameters.
+
+C<< $expires_in >> integer value in range 1..604800 (1 second .. 7 days).
+
+C<< $expires_in >> default value is its maximum: 604800
+
+The signed uri is returned.
+
+=cut
+
+sub sign_uri {
+	my ( $self, $uri, $expires_in ) = @_;
+
+	my $request = $self->_augment_uri( $uri, $expires_in );
+
+	my $signature = $self->_signature( $request );
+
+	$uri = $request->uri;
+	my $query = $uri->query;
+	$uri->query( undef );
+	$uri = $uri . '?' . $self->_sort_query_string( $query );
+	$uri .= "&$X_AMZ_SIGNATURE=$signature";
+
+	return $uri;
+}
+
 # _headers_to_sign:
 # Return the sorted lower case headers as required by the generation of canonical headers
 
 sub _headers_to_sign {
 	my $req = shift;
 
-	return sort { $a cmp $b } map { lc } $req->headers->header_field_names;
+	my @headers_to_sign = $req->uri->query_param( $X_AMZ_SIGNEDHEADERS )
+		? $req->uri->query_param( $X_AMZ_SIGNEDHEADERS )
+		: $req->headers->header_field_names
+		;
+
+	return sort { $a cmp $b } map { lc } @headers_to_sign
 }
 
 # _augment_request:
@@ -97,11 +134,38 @@ sub _headers_to_sign {
 sub _augment_request {
 	my ( $self, $request ) = @_;
 
-	$request->header($X_AMZ_DATE => $self->_format_amz_date( $self->_req_timepiece($request) )
+	$request->header($X_AMZ_DATE => $self->_format_amz_date( $self->_req_timepiece($request) ))
 		unless $request->header($X_AMZ_DATE);
 
 	$request->header($X_AMZ_CONTENT_SHA256 => sha256_hex($request->content))
 		unless $request->header($X_AMZ_CONTENT_SHA256);
+
+	return $request;
+}
+
+# _augment_uri:
+# Append mandatory uri parameters
+
+sub _augment_uri {
+	my ($self, $uri, $expires_in) = @_;
+
+	my $request = HTTP::Request->new( GET => $uri );
+
+	$request->uri->query_param( $X_AMZ_DATE => $self->_format_amz_date( $self->_now ) )
+		unless $request->uri->query_param( $X_AMZ_DATE );
+
+	$request->uri->query_param( $X_AMZ_ALGORITHM => $ALGORITHM )
+		unless $request->uri->query_param( $X_AMZ_ALGORITHM );
+
+	$request->uri->query_param( $X_AMZ_CREDENTIAL => $self->_credential( $request ) )
+		unless $request->uri->query_param( $X_AMZ_CREDENTIAL );
+
+	$request->uri->query_param( $X_AMZ_EXPIRES => $expires_in || $MAX_EXPIRES )
+		unless $request->uri->query_param( $X_AMZ_EXPIRES );
+	$request->uri->query_param( $X_AMZ_EXPIRES => $MAX_EXPIRES )
+		if $request->uri->query_param( $X_AMZ_EXPIRES ) > $MAX_EXPIRES;
+
+	$request->uri->query_param( $X_AMZ_SIGNEDHEADERS => 'host' );
 
 	return $request;
 }
@@ -120,13 +184,15 @@ sub _canonical_request {
 		: ( $req->uri, '' );
 	$creq_canonical_uri =~ s@^https?://[^/]*/?@/@;
 	$creq_canonical_uri = _simplify_uri( $creq_canonical_uri );
-	$creq_canonical_query_string = _sort_query_string( $creq_canonical_query_string );
+	$creq_canonical_query_string = $self->_sort_query_string( $creq_canonical_query_string );
 
 	# Ensure Host header is present as its required
 	if (!$req->header('host')) {
 		$req->header('Host' => $req->uri->host);
 	}
-	my $creq_payload_hash = $req->header($X_AMZ_CONTENT_SHA256);
+	my $creq_payload_hash = $req->header($X_AMZ_CONTENT_SHA256)
+		# Signed uri doesn't have content
+		|| 'UNSIGNED-PAYLOAD';
 
 	# There's a bug in AMS4 which causes requests without x-amz-date set to be rejected
 	# so we always add one if its not present.
@@ -231,6 +297,7 @@ sub _simplify_uri {
 	return $simple_uri;
 }
 sub _sort_query_string {
+	my $self = shift;
 	return '' unless $_[0];
 	my @params;
 	for my $param ( split /&/, $_[0] ) {
@@ -266,12 +333,12 @@ sub _format_amz_date {
 }
 
 sub _now {
-	Time::Piece::gmtime;
+	return scalar Time::Piece::gmtime;
 }
 
 sub _req_timepiece {
 	my ($self, $req) = @_;
-	my $x_date = $req->header($X_AMZ_DATE);
+	my $x_date = $req->header($X_AMZ_DATE) || $req->uri->query_param($X_AMZ_DATE);
 	my $date = $x_date || $req->header('Date');
 	if (!$date) {
 		# No date set by the caller so set one up

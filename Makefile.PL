@@ -19,6 +19,7 @@ my %WriteMakefile_args = (
         'Test::More' => 0,
         'File::Slurper' => 0,
         'HTTP::Request' => 0,
+        'Sub::Override' => 0,
     },
     META_MERGE => {
         'meta-spec' => { version => 2 },
