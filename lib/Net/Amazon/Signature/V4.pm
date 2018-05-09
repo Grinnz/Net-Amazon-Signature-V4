@@ -10,6 +10,13 @@ use URI::Escape;
 
 our $ALGORITHM = 'AWS4-HMAC-SHA256';
 
+our $X_AMZ_ALGORITHM      = 'X-Amz-Algorithm';
+our $X_AMZ_CONTENT_SHA256 = 'X-Amz-Content-Sha256';
+our $X_AMZ_CREDENTIAL     = 'X-Amz-Credential';
+our $X_AMZ_DATE           = 'X-Amz-Date';
+our $X_AMZ_EXPIRES        = 'X-Amz-Expires';
+our $X_AMZ_SIGNEDHEADERS  = 'X-Amz-SignedHeaders';
+
 =head1 NAME
 
 Net::Amazon::Signature::V4 - Implements the Amazon Web Services signature version 4, AWS4-HMAC-SHA256
@@ -90,11 +97,11 @@ sub _headers_to_sign {
 sub _augment_request {
 	my ( $self, $request ) = @_;
 
-	$request->header('X-Amz-Date' => $self->_format_amz_date( $self->_req_timepiece($request) ))
-		unless $request->header('X-Amz-Date');
+	$request->header($X_AMZ_DATE => $self->_format_amz_date( $self->_req_timepiece($request) )
+		unless $request->header($X_AMZ_DATE);
 
-	$request->header('X-Amz-Content-Sha256' => sha256_hex($request->content))
-		unless $request->header('X-Amz-Content-Sha256');
+	$request->header($X_AMZ_CONTENT_SHA256 => sha256_hex($request->content))
+		unless $request->header($X_AMZ_CONTENT_SHA256);
 
 	return $request;
 }
@@ -119,11 +126,11 @@ sub _canonical_request {
 	if (!$req->header('host')) {
 		$req->header('Host' => $req->uri->host);
 	}
-	my $creq_payload_hash = $req->header('x-amz-content-sha256');
+	my $creq_payload_hash = $req->header($X_AMZ_CONTENT_SHA256);
 
 	# There's a bug in AMS4 which causes requests without x-amz-date set to be rejected
 	# so we always add one if its not present.
-	my $amz_date = $req->header('x-amz-date');
+	my $amz_date = $req->header($X_AMZ_DATE);
 	my @sorted_headers = _headers_to_sign( $req );
 	my $creq_canonical_headers = join '',
 		map {
@@ -264,7 +271,7 @@ sub _now {
 
 sub _req_timepiece {
 	my ($self, $req) = @_;
-	my $x_date = $req->header('X-Amz-Date');
+	my $x_date = $req->header($X_AMZ_DATE);
 	my $date = $x_date || $req->header('Date');
 	if (!$date) {
 		# No date set by the caller so set one up
