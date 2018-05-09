@@ -90,7 +90,7 @@ sub _headers_to_sign {
 sub _augment_request {
 	my ( $self, $request ) = @_;
 
-	$request->header('X-Amz-Date' => _req_timepiece($request)->strftime('%Y%m%dT%H%M%SZ'))
+	$request->header('X-Amz-Date' => $self->_req_timepiece($request)->strftime('%Y%m%dT%H%M%SZ'))
 		unless $request->header('X-Amz-Date');
 
 	$request->header('X-Amz-Content-Sha256' => sha256_hex($request->content))
@@ -144,7 +144,7 @@ sub _canonical_request {
 
 sub _string_to_sign {
 	my ( $self, $req ) = @_;
-	my $dt = _req_timepiece( $req );
+	my $dt = $self->_req_timepiece( $req );
 	my $creq = $self->_canonical_request($req);
 	my $sts_request_date = $dt->strftime( '%Y%m%dT%H%M%SZ' );
 	my $sts_credential_scope = join '/', $dt->strftime('%Y%m%d'), $self->{endpoint}, $self->{service}, 'aws4_request';
@@ -160,7 +160,7 @@ sub _string_to_sign {
 sub _signature {
 	my ( $self, $req ) = @_;
 
-	my $dt = _req_timepiece( $req );
+	my $dt = $self->_req_timepiece( $req );
 	my $sts = $self->_string_to_sign( $req );
 	my $k_date    = hmac_sha256( $dt->strftime('%Y%m%d'), 'AWS4' . $self->{secret} );
 	my $k_region  = hmac_sha256( $self->{endpoint},        $k_date    );
@@ -174,7 +174,7 @@ sub _signature {
 sub _credential {
 	my ( $self, $req ) = @_;
 
-	my $dt = _req_timepiece( $req );
+	my $dt = $self->_req_timepiece( $req );
 
 	my $authz_credential = join '/', $self->{access_key_id}, $dt->strftime('%Y%m%d'), $self->{endpoint}, $self->{service}, 'aws4_request';
 	return $authz_credential;
@@ -251,13 +251,17 @@ sub _str_to_timepiece {
 		return Time::Piece->strptime($date, '%d %b %Y %H:%M:%S %Z');
 	}
 }
+sub _now {
+	Time::Piece::gmtime;
+}
+
 sub _req_timepiece {
-	my $req = shift;
+	my ($self, $req) = @_;
 	my $x_date = $req->header('X-Amz-Date');
 	my $date = $x_date || $req->header('Date');
 	if (!$date) {
 		# No date set by the caller so set one up
-		my $piece = Time::Piece::gmtime;
+		my $piece = $self->_now;
 		$req->date($piece->epoch);
 		return $piece
 	}
