@@ -90,7 +90,7 @@ sub _headers_to_sign {
 sub _augment_request {
 	my ( $self, $request ) = @_;
 
-	$request->header('X-Amz-Date' => $self->_req_timepiece($request)->strftime('%Y%m%dT%H%M%SZ'))
+	$request->header('X-Amz-Date' => $self->_format_amz_date( $self->_req_timepiece($request) ))
 		unless $request->header('X-Amz-Date');
 
 	$request->header('X-Amz-Content-Sha256' => sha256_hex($request->content))
@@ -146,7 +146,7 @@ sub _string_to_sign {
 	my ( $self, $req ) = @_;
 	my $dt = $self->_req_timepiece( $req );
 	my $creq = $self->_canonical_request($req);
-	my $sts_request_date = $dt->strftime( '%Y%m%dT%H%M%SZ' );
+	my $sts_request_date = $self->_format_amz_date( $dt );
 	my $sts_credential_scope = join '/', $dt->strftime('%Y%m%d'), $self->{endpoint}, $self->{service}, 'aws4_request';
 	my $sts_creq_hash = sha256_hex( $creq );
 
@@ -251,6 +251,13 @@ sub _str_to_timepiece {
 		return Time::Piece->strptime($date, '%d %b %Y %H:%M:%S %Z');
 	}
 }
+
+sub _format_amz_date {
+	my ($self, $dt) = @_;
+
+	$dt->strftime('%Y%m%dT%H%M%SZ');
+}
+
 sub _now {
 	Time::Piece::gmtime;
 }
