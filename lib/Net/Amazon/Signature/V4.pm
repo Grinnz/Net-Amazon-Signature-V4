@@ -178,8 +178,6 @@ Maintained by Dan Book, C<< <dbook at cpan.org> >>
 
 sub _aws_uri_escape {
 	my $elem = uri_escape(shift);
-	$elem =~ s/\+/%20/g;
-	$elem =~ s/\*/%2A/g;
 	$elem =~ s/\%7E/~/g;
 	return $elem;
 }
