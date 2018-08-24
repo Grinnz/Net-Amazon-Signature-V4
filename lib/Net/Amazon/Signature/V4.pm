@@ -265,7 +265,7 @@ L<http://cpanratings.perl.org/d/Net-Amazon-Signature-V4>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/Net-Amazon-Signature-V4/>
+L<https://metacpan.org/release/Net-Amazon-Signature-V4>
 
 =back
 
