@@ -174,14 +174,6 @@ Maintained by Dan Book, C<< <dbook at cpan.org> >>
 
 =cut
 
-# https://github.com/aws/aws-sdk-java-v2/blob/a9387dcb384ef8d62e022483d7a10635f891d618/utils/src/main/java/software/amazon/awssdk/utils/http/SdkHttpUtils.java#L41
-
-sub _aws_uri_escape {
-	my $elem = uri_escape(shift);
-	$elem =~ s/\%7E/~/g;
-	return $elem;
-}
-
 sub _simplify_uri {
 	my $orig_uri = shift;
 	my @parts = split /\//, $orig_uri;
@@ -191,7 +183,7 @@ sub _simplify_uri {
 		} elsif ( $part eq '..' ) {
 			pop @simple_parts;
 		} else {
-			push @simple_parts, _aws_uri_escape($part);
+			push @simple_parts, uri_escape($part);
 		}
 	}
 	my $simple_uri = '/' . join '/', @simple_parts;
