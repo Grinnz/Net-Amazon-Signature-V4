@@ -183,7 +183,7 @@ sub _simplify_uri {
 		} elsif ( $part eq '..' ) {
 			pop @simple_parts;
 		} else {
-			push @simple_parts, $part;
+			push @simple_parts, uri_escape($part);
 		}
 	}
 	my $simple_uri = '/' . join '/', @simple_parts;
