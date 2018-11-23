@@ -7,8 +7,19 @@ use sort 'stable';
 use Digest::SHA qw/sha256_hex hmac_sha256 hmac_sha256_hex/;
 use Time::Piece ();
 use URI::Escape;
+use URI;
+use URI::QueryParam;
 
 our $ALGORITHM = 'AWS4-HMAC-SHA256';
+our $MAX_EXPIRES = 604800; # Max, 7 days
+
+our $X_AMZ_ALGORITHM      = 'X-Amz-Algorithm';
+our $X_AMZ_CONTENT_SHA256 = 'X-Amz-Content-Sha256';
+our $X_AMZ_CREDENTIAL     = 'X-Amz-Credential';
+our $X_AMZ_DATE           = 'X-Amz-Date';
+our $X_AMZ_EXPIRES        = 'X-Amz-Expires';
+our $X_AMZ_SIGNEDHEADERS  = 'X-Amz-SignedHeaders';
+our $X_AMZ_SIGNATURE      = 'X-Amz-Signature';
 
 =head1 NAME
 
@@ -67,9 +78,40 @@ Signs a request with your credentials by appending the Authorization header. $re
 
 sub sign {
 	my ( $self, $request ) = @_;
+
+	$request = $self->_augment_request( $request );
+
 	my $authz = $self->_authorization( $request );
 	$request->header( Authorization => $authz );
 	return $request;
+}
+
+=head2 sign_uri( $uri, $expires_in? )
+
+Signs an uri with your credentials by appending the Authorization query parameters.
+
+C<< $expires_in >> integer value in range 1..604800 (1 second .. 7 days).
+
+C<< $expires_in >> default value is its maximum: 604800
+
+The signed uri is returned.
+
+=cut
+
+sub sign_uri {
+	my ( $self, $uri, $expires_in ) = @_;
+
+	my $request = $self->_augment_uri( $uri, $expires_in );
+
+	my $signature = $self->_signature( $request );
+
+	$uri = $request->uri;
+	my $query = $uri->query;
+	$uri->query( undef );
+	$uri = $uri . '?' . $self->_sort_query_string( $query );
+	$uri .= "&$X_AMZ_SIGNATURE=$signature";
+
+	return $uri;
 }
 
 # _headers_to_sign:
@@ -78,7 +120,54 @@ sub sign {
 sub _headers_to_sign {
 	my $req = shift;
 
-	return sort { $a cmp $b } map { lc } $req->headers->header_field_names;
+	my @headers_to_sign = $req->uri->query_param( $X_AMZ_SIGNEDHEADERS )
+		? $req->uri->query_param( $X_AMZ_SIGNEDHEADERS )
+		: $req->headers->header_field_names
+		;
+
+	return sort { $a cmp $b } map { lc } @headers_to_sign
+}
+
+# _augment_request:
+# Append mandatory header fields
+
+sub _augment_request {
+	my ( $self, $request ) = @_;
+
+	$request->header($X_AMZ_DATE => $self->_format_amz_date( $self->_req_timepiece($request) ))
+		unless $request->header($X_AMZ_DATE);
+
+	$request->header($X_AMZ_CONTENT_SHA256 => sha256_hex($request->content))
+		unless $request->header($X_AMZ_CONTENT_SHA256);
+
+	return $request;
+}
+
+# _augment_uri:
+# Append mandatory uri parameters
+
+sub _augment_uri {
+	my ($self, $uri, $expires_in) = @_;
+
+	my $request = HTTP::Request->new( GET => $uri );
+
+	$request->uri->query_param( $X_AMZ_DATE => $self->_format_amz_date( $self->_now ) )
+		unless $request->uri->query_param( $X_AMZ_DATE );
+
+	$request->uri->query_param( $X_AMZ_ALGORITHM => $ALGORITHM )
+		unless $request->uri->query_param( $X_AMZ_ALGORITHM );
+
+	$request->uri->query_param( $X_AMZ_CREDENTIAL => $self->_credential( $request ) )
+		unless $request->uri->query_param( $X_AMZ_CREDENTIAL );
+
+	$request->uri->query_param( $X_AMZ_EXPIRES => $expires_in || $MAX_EXPIRES )
+		unless $request->uri->query_param( $X_AMZ_EXPIRES );
+	$request->uri->query_param( $X_AMZ_EXPIRES => $MAX_EXPIRES )
+		if $request->uri->query_param( $X_AMZ_EXPIRES ) > $MAX_EXPIRES;
+
+	$request->uri->query_param( $X_AMZ_SIGNEDHEADERS => 'host' );
+
+	return $request;
 }
 
 # _canonical_request:
@@ -95,25 +184,19 @@ sub _canonical_request {
 		: ( $req->uri, '' );
 	$creq_canonical_uri =~ s@^https?://[^/]*/?@/@;
 	$creq_canonical_uri = _simplify_uri( $creq_canonical_uri );
-	$creq_canonical_query_string = _sort_query_string( $creq_canonical_query_string );
+	$creq_canonical_query_string = $self->_sort_query_string( $creq_canonical_query_string );
 
 	# Ensure Host header is present as its required
 	if (!$req->header('host')) {
 		$req->header('Host' => $req->uri->host);
 	}
-	my $creq_payload_hash = $req->header('x-amz-content-sha256');
-	if (!$creq_payload_hash) {
-		$creq_payload_hash = sha256_hex($req->content);
-		# X-Amz-Content-Sha256 must be specified now
-		$req->header('X-Amz-Content-Sha256' => $creq_payload_hash);
-	}
+	my $creq_payload_hash = $req->header($X_AMZ_CONTENT_SHA256)
+		# Signed uri doesn't have content
+		|| 'UNSIGNED-PAYLOAD';
 
 	# There's a bug in AMS4 which causes requests without x-amz-date set to be rejected
 	# so we always add one if its not present.
-	my $amz_date = $req->header('x-amz-date');
-	if (!$amz_date) {
-		$req->header('X-Amz-Date' => _req_timepiece($req)->strftime('%Y%m%dT%H%M%SZ'));
-	}
+	my $amz_date = $req->header($X_AMZ_DATE);
 	my @sorted_headers = _headers_to_sign( $req );
 	my $creq_canonical_headers = join '',
 		map {
@@ -122,7 +205,7 @@ sub _canonical_request {
 				join ',', sort {$a cmp $b } _trim_whitespace($req->header($_) )
 		}
 		@sorted_headers;
-	my $creq_signed_headers = join ';', map {lc} @sorted_headers;
+	my $creq_signed_headers = $self->_signed_headers( $req );
 	my $creq = join "\x0a",
 		$creq_method, $creq_canonical_uri, $creq_canonical_query_string,
 		$creq_canonical_headers, $creq_signed_headers, $creq_payload_hash;
@@ -134,9 +217,9 @@ sub _canonical_request {
 
 sub _string_to_sign {
 	my ( $self, $req ) = @_;
-	my $dt = _req_timepiece( $req );
+	my $dt = $self->_req_timepiece( $req );
 	my $creq = $self->_canonical_request($req);
-	my $sts_request_date = $dt->strftime( '%Y%m%dT%H%M%SZ' );
+	my $sts_request_date = $self->_format_amz_date( $dt );
 	my $sts_credential_scope = join '/', $dt->strftime('%Y%m%d'), $self->{endpoint}, $self->{service}, 'aws4_request';
 	my $sts_creq_hash = sha256_hex( $creq );
 
@@ -147,10 +230,10 @@ sub _string_to_sign {
 # _authorization
 # Construct the authorization string
 
-sub _authorization {
+sub _signature {
 	my ( $self, $req ) = @_;
 
-	my $dt = _req_timepiece( $req );
+	my $dt = $self->_req_timepiece( $req );
 	my $sts = $self->_string_to_sign( $req );
 	my $k_date    = hmac_sha256( $dt->strftime('%Y%m%d'), 'AWS4' . $self->{secret} );
 	my $k_region  = hmac_sha256( $self->{endpoint},        $k_date    );
@@ -158,8 +241,31 @@ sub _authorization {
 	my $k_signing = hmac_sha256( 'aws4_request',           $k_service );
 
 	my $authz_signature = hmac_sha256_hex( $sts, $k_signing );
+	return $authz_signature;
+}
+
+sub _credential {
+	my ( $self, $req ) = @_;
+
+	my $dt = $self->_req_timepiece( $req );
+
 	my $authz_credential = join '/', $self->{access_key_id}, $dt->strftime('%Y%m%d'), $self->{endpoint}, $self->{service}, 'aws4_request';
+	return $authz_credential;
+}
+
+sub _signed_headers {
+	my ( $self, $req ) = @_;
+
 	my $authz_signed_headers = join ';', _headers_to_sign( $req );
+	return $authz_signed_headers;
+}
+
+sub _authorization {
+	my ( $self, $req ) = @_;
+
+	my $authz_signature = $self->_signature( $req );
+	my $authz_credential = $self->_credential( $req );
+	my $authz_signed_headers = $self->_signed_headers( $req );
 
 	my $authz = "$ALGORITHM Credential=$authz_credential,SignedHeaders=$authz_signed_headers,Signature=$authz_signature";
 	return $authz;
@@ -191,6 +297,7 @@ sub _simplify_uri {
 	return $simple_uri;
 }
 sub _sort_query_string {
+	my $self = shift;
 	return '' unless $_[0];
 	my @params;
 	for my $param ( split /&/, $_[0] ) {
@@ -218,13 +325,24 @@ sub _str_to_timepiece {
 		return Time::Piece->strptime($date, '%d %b %Y %H:%M:%S %Z');
 	}
 }
+
+sub _format_amz_date {
+	my ($self, $dt) = @_;
+
+	$dt->strftime('%Y%m%dT%H%M%SZ');
+}
+
+sub _now {
+	return scalar Time::Piece::gmtime;
+}
+
 sub _req_timepiece {
-	my $req = shift;
-	my $x_date = $req->header('X-Amz-Date');
+	my ($self, $req) = @_;
+	my $x_date = $req->header($X_AMZ_DATE) || $req->uri->query_param($X_AMZ_DATE);
 	my $date = $x_date || $req->header('Date');
 	if (!$date) {
 		# No date set by the caller so set one up
-		my $piece = Time::Piece::gmtime;
+		my $piece = $self->_now;
 		$req->date($piece->epoch);
 		return $piece
 	}
