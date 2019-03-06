@@ -55,6 +55,8 @@ sub new {
 		endpoint      => $endpoint,
 		service       => $service,
 	};
+	# The URI should not be double escaped for the S3 service
+	$self->{no_escape_uri} = ( lc($service) eq 's3' ) ? 1 : 0;
 	bless $self, $class;
 	return $self;
 }
@@ -94,7 +96,7 @@ sub _canonical_request {
 		? ( $1, $2 )
 		: ( $req->uri, '' );
 	$creq_canonical_uri =~ s@^https?://[^/]*/?@/@;
-	$creq_canonical_uri = _simplify_uri( $creq_canonical_uri );
+	$creq_canonical_uri = $self->_simplify_uri( $creq_canonical_uri );
 	$creq_canonical_query_string = _sort_query_string( $creq_canonical_query_string );
 
 	# Ensure Host header is present as its required
@@ -175,6 +177,7 @@ Maintained by Dan Book, C<< <dbook at cpan.org> >>
 =cut
 
 sub _simplify_uri {
+	my $self = shift;
 	my $orig_uri = shift;
 	my @parts = split /\//, $orig_uri;
 	my @simple_parts = ();
@@ -183,7 +186,12 @@ sub _simplify_uri {
 		} elsif ( $part eq '..' ) {
 			pop @simple_parts;
 		} else {
-			push @simple_parts, uri_escape($part);
+			if ( $self->{no_escape_uri} ) {
+				push @simple_parts, $part;
+			}
+			else {
+				push @simple_parts, uri_escape($part);
+			}
 		}
 	}
 	my $simple_uri = '/' . join '/', @simple_parts;
