@@ -48,13 +48,12 @@ Note that the access key ID is an alphanumeric string, not your account ID. The 
 
 sub new {
 	my $class = shift;
-	my ( $access_key_id, $secret, $endpoint, $service ) = @_;
-	my $self = {
-		access_key_id => $access_key_id,
-		secret        => $secret,
-		endpoint      => $endpoint,
-		service       => $service,
-	};
+	my $self = {};
+	if (int(@_) > 1) {
+		@{$self}{qw/ access_key_id secret endpoint service /} = @_;
+	} else {
+		$self = $_[0];
+	}
 	bless $self, $class;
 	return $self;
 }
@@ -113,6 +112,9 @@ sub _canonical_request {
 	my $amz_date = $req->header('x-amz-date');
 	if (!$amz_date) {
 		$req->header('X-Amz-Date' => _req_timepiece($req)->strftime('%Y%m%dT%H%M%SZ'));
+	}
+	if ($self->{security_token} && not($req->header('X-Amz-Security-Token'))) {
+		$req->header('X-Amz-Security-Token' => $self->{security_token});
 	}
 	my @sorted_headers = _headers_to_sign( $req );
 	my $creq_canonical_headers = join '',
