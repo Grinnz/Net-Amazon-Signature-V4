@@ -41,6 +41,7 @@ my %WriteMakefile_args = (
             'José Borges Ferreira <jose.ferreira@anubisnetworks.com>',
             'Karen Etheridge <ether@cpan.org>',
             'Steven Hartland <steven.hartland@multiplay.co.uk>',
+            'Tim Mullin <tim@cpanel.net>',
         ],
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
