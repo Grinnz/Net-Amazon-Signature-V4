@@ -25,8 +25,6 @@ our $VERSION = '0.19';
 
 =head1 SYNOPSIS
 
-This module signs an HTTP::Request to Amazon Web Services by appending an Authorization header. Amazon Web Services signature version 4, AWS4-HMAC-SHA256, is used.
-
     use Net::Amazon::Signature::V4;
 
     my $sig = Net::Amazon::Signature::V4->new( $access_key_id, $secret, $endpoint, $service );
@@ -34,11 +32,17 @@ This module signs an HTTP::Request to Amazon Web Services by appending an Author
     my $signed_req = $sig->sign( $req );
     ...
 
+=head1 DESCRIPTION
+
+This module signs an HTTP::Request to Amazon Web Services by appending an Authorization header. Amazon Web Services signature version 4, AWS4-HMAC-SHA256, is used.
+
 The primary purpose of this module is to be used by Net::Amazon::Glacier.
 
 =head1 METHODS
 
-=head2 new( $access_key_id, $secret, $endpoint, $service )
+=head2 new
+
+    my $sig = Net::Amazon::Signature::V4->new( $access_key_id, $secret, $endpoint, $service );
 
 Constructs the signature object, which is used to sign requests.
 
@@ -61,7 +65,9 @@ sub new {
 	return $self;
 }
 
-=head2 sign( $request )
+=head2 sign
+
+    my $signed_request = $sig->sign( $request );
 
 Signs a request with your credentials by appending the Authorization header. $request should be an HTTP::Request. The signed request is returned.
 
@@ -241,8 +247,8 @@ sub _req_timepiece {
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-net-amazon-signature-v4 at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Net-Amazon-Signature-V4>.  I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-Net-Amazon-Signature-V4 at rt.cpan.org>, or through
+the web interface at L<https://rt.cpan.org/Public/Bug/Report.html?Queue=Net-Amazon-Signature-V4>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 
@@ -261,15 +267,11 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker (report bugs here)
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Net-Amazon-Signature-V4>
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=Net-Amazon-Signature-V4>
 
-=item * AnnoCPAN: Annotated CPAN documentation
+=item * Source on GitHub
 
-L<http://annocpan.org/dist/Net-Amazon-Signature-V4>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Net-Amazon-Signature-V4>
+L<https://github.com/Grinnz/Net-Amazon-Signature-V4>
 
 =item * Search CPAN
 
