@@ -1,6 +1,7 @@
 Revision history for Net-Amazon-Signature-v4
 0.20
 		- Don't double-escape URI segments for S3 (RT#128728, GH#7)
+		- Allow passing parameters to new() in a hashref
 
 0.19	2018-08-24
 		- Fix error in signature if a URI path component is 0 (GH#4)

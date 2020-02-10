@@ -43,24 +43,31 @@ The primary purpose of this module is to be used by Net::Amazon::Glacier.
 =head2 new
 
     my $sig = Net::Amazon::Signature::V4->new( $access_key_id, $secret, $endpoint, $service );
+    my $sig = Net::Amazon::Signature::V4->new({
+        access_key_id => $access_key_id,
+        secret        => $secret,
+        endpoint      => $endpoint,
+        service       => $service,
+    });
 
 Constructs the signature object, which is used to sign requests.
 
 Note that the access key ID is an alphanumeric string, not your account ID. The endpoint could be "eu-west-1", and the service could be "glacier".
 
+Since version 0.20, parameters can be passed in a hashref. The keys C<access_key_id>, C<secret>, C<endpoint>, and C<service> are required.
+
 =cut
 
 sub new {
 	my $class = shift;
-	my ( $access_key_id, $secret, $endpoint, $service ) = @_;
-	my $self = {
-		access_key_id => $access_key_id,
-		secret        => $secret,
-		endpoint      => $endpoint,
-		service       => $service,
-	};
+	my $self = {};
+	if (@_ == 1 and ref $_[0] eq 'HASH') {
+		@$self{keys %{$_[0]}} = values %{$_[0]};
+	} else {
+		@$self{qw(access_key_id secret endpoint service)} = @_;
+	}
 	# The URI should not be double escaped for the S3 service
-	$self->{no_escape_uri} = ( lc($service) eq 's3' ) ? 1 : 0;
+	$self->{no_escape_uri} = ( lc($self->{service}) eq 's3' ) ? 1 : 0;
 	bless $self, $class;
 	return $self;
 }
