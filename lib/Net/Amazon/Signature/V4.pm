@@ -55,6 +55,7 @@ Constructs the signature object, which is used to sign requests.
 Note that the access key ID is an alphanumeric string, not your account ID. The endpoint could be "eu-west-1", and the service could be "glacier".
 
 Since version 0.20, parameters can be passed in a hashref. The keys C<access_key_id>, C<secret>, C<endpoint>, and C<service> are required.
+C<security_token>, if passed, will be applied to each signed request as the C<X-Amz-Security-Token> header.
 
 =cut
 
@@ -128,6 +129,9 @@ sub _canonical_request {
 	my $amz_date = $req->header('x-amz-date');
 	if (!$amz_date) {
 		$req->header('X-Amz-Date' => _req_timepiece($req)->strftime('%Y%m%dT%H%M%SZ'));
+	}
+	if (defined $self->{security_token} and !defined $req->header('X-Amz-Security-Token')) {
+		$req->header('X-Amz-Security-Token' => $self->{security_token});
 	}
 	my @sorted_headers = _headers_to_sign( $req );
 	my $creq_canonical_headers = join '',

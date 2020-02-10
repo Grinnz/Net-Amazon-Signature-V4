@@ -40,6 +40,7 @@ my %WriteMakefile_args = (
             'Javier Arturo Rodriguez <javier@rodriguez.org.mx>',
             'José Borges Ferreira <jose.ferreira@anubisnetworks.com>',
             'Karen Etheridge <ether@cpan.org>',
+            'Maik Hentsche <caldrin@amazon.com>',
             'Steven Hartland <steven.hartland@multiplay.co.uk>',
             'Tim Mullin <tim@cpanel.net>',
         ],
