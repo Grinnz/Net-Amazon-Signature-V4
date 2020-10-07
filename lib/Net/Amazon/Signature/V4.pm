@@ -115,7 +115,8 @@ sub _canonical_request {
 
 	# Ensure Host header is present as its required
 	if (!$req->header('host')) {
-		$req->header('Host' => $req->uri->host);
+		my $host = length $req->uri->_port ? $req->uri->host_port : $req->uri->host;
+		$req->header('Host' => $host);
 	}
 	my $creq_payload_hash = $req->header('x-amz-content-sha256');
 	if (!$creq_payload_hash) {
