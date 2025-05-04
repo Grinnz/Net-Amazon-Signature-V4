@@ -1,4 +1,7 @@
 Revision history for Net-Amazon-Signature-v4
+0.22
+        - Update LICENSE text
+
 0.21	2020-10-08
 		- Include non-standard ports in request Host header (GH#9)
 
